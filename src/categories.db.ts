@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { PrismaClient } from "@prisma/client";
 import { createFactory } from "hono/factory";
+import type { JsonArray } from "@prisma/client/runtime/library";
 
 const CategorySchema = z.object({
   id: z.number(),
@@ -58,4 +59,22 @@ export async function createCategory(
   });
 
   return createdCategory;
+}
+
+export async function updateCategory(body: JsonArray, slug: string) {
+  console.log("recieved json:", body);
+
+  const updatedCategory = await prisma.categories.updateMany({
+    where: { slug },
+    data: body,
+  });
+
+  return updatedCategory;
+}
+
+export async function deleteCategory(slug: string) {
+  const deleted = await prisma.categories.deleteMany({
+    where: { slug },
+  });
+  return deleted;
 }

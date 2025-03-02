@@ -5,6 +5,8 @@ import {
   getCategories,
   getCategory,
   validateCategory,
+  updateCategory,
+  deleteCategory,
 } from "./categories.db.js";
 
 const app = new Hono();
@@ -60,7 +62,45 @@ app.post("/categories", async (c) => {
   return c.json(createdCategory, 201);
 });
 
-app.patch("/categories/");
+app.patch("/categories/:slug", async (c) => {
+  try {
+    const slug = c.req.param("slug");
+    const body = await c.req.json();
+    console.log(body);
+
+    if (!body.title && !body.slug) {
+      return c.json(
+        { error: "Must provide either title or slug (description)" },
+        400
+      );
+    }
+
+    const updatedCategory = await updateCategory(body, slug);
+    if (updatedCategory.count === 0) {
+      return c.json({ error: "category not found" }, 404);
+    }
+
+    return c.json({ message: "database updated successfully" }, 200);
+  } catch (e) {
+    console.error(e);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+app.delete("/categories/:slug", async (c) => {
+  try {
+    const slug = c.req.param("slug");
+
+    const deletedCategory = await deleteCategory(slug);
+    if (deletedCategory.count === 0) {
+      return c.json({ error: "category couldn't be deleted" }, 404);
+    }
+
+    return c.body(null, 204);
+  } catch (error) {
+    console.error(c.json({ error: "internal server error" }, 500));
+  }
+});
 
 serve(
   {
