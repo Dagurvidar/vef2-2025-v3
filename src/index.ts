@@ -1,60 +1,73 @@
-import { serve } from '@hono/node-server'
-import { Hono } from 'hono'
-import { createCategory, getCategories, getCategory, validateCategory } from './categories.db.js'
+import { serve } from "@hono/node-server";
+import { Hono } from "hono";
+import {
+  createCategory,
+  getCategories,
+  getCategory,
+  validateCategory,
+} from "./categories.db.js";
 
-const app = new Hono()
+const app = new Hono();
 
-app.get('/', (c) => {
+app.get("/", (c) => {
+  const data = {
+    hello: "hono",
+  };
 
-  const data =  {
-    hello: 'hono'
-  }
+  return c.json(data);
+});
 
-  return c.json(data)
-})
-
-app.get('/categories', async (c) => {
+app.get("/categories", async (c) => {
   const categories = await getCategories();
-  return c.json(categories)
-})
+  return c.json(categories);
+});
 
-app.get('/categories/:slug', (c) => {
-  const slug = c.req.param('slug')
+app.get("/categories/:slug", async (c) => {
+  const slug = c.req.param("slug");
 
   // Validate á hámarkslengd á slug
 
-  const category = getCategory(slug)
+  const category = await getCategory(slug);
+  console.log(category);
 
   if (!category) {
-    return c.json({ message: 'not found' }, 404)
+    return c.json({ message: "not found" }, 404);
   }
 
   return c.json(category);
-})
+});
 
-app.post('/categories', async (c) => {
+app.post("/categories", async (c) => {
   let categoryToCreate: unknown;
   try {
     categoryToCreate = await c.req.json();
     console.log(categoryToCreate);
   } catch (e) {
-    return c.json({ error: 'invalid json' }, 400)
+    return c.json({ error: "invalid json" }, 400);
   }
 
-  const validCategory = validateCategory(categoryToCreate)
+  const validCategory = validateCategory(categoryToCreate);
 
   if (!validCategory.success) {
-    return c.json({ error: 'invalid data', errors: validCategory.error.flatten() }, 400)
+    return c.json(
+      { error: "invalid data", errors: validCategory.error.flatten() },
+      400
+    );
   }
 
-  const createdCategory = await createCategory(validCategory.data)
+  const createdCategory = await createCategory(validCategory.data);
 
-  return c.json(createdCategory, 201)
-})
+  return c.json(createdCategory, 201);
+});
 
-serve({
-  fetch: app.fetch,
-  port: 3000
-}, (info) => {
-  console.log(`Server is running on http://localhost:${info.port}`)
-})
+app.patch("/categories/");
+
+serve(
+  {
+    fetch: app.fetch,
+    port: 3000,
+  },
+  (info) => {
+    console.log(`Server is running on http://localhost:${info.port}`);
+  }
+);
