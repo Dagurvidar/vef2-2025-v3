@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import { createFactory } from "hono/factory";
 import type { JsonArray } from "@prisma/client/runtime/library";
 
@@ -61,7 +61,10 @@ export async function createCategory(
   return createdCategory;
 }
 
-export async function updateCategory(body: JsonArray, slug: string) {
+export async function updateCategory(
+  body: JsonArray,
+  slug: string
+): Promise<Prisma.BatchPayload> {
   console.log("recieved json:", body);
 
   const updatedCategory = await prisma.categories.updateMany({
@@ -72,7 +75,9 @@ export async function updateCategory(body: JsonArray, slug: string) {
   return updatedCategory;
 }
 
-export async function deleteCategory(slug: string) {
+export async function deleteCategory(
+  slug: string
+): Promise<Prisma.BatchPayload> {
   const deleted = await prisma.categories.deleteMany({
     where: { slug },
   });
